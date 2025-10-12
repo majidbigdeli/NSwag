@@ -1,4 +1,4 @@
-{% template Client.Class.Annotations %}
+﻿{% template Client.Class.Annotations %}
 [System.CodeDom.Compiler.GeneratedCode("NSwag", "{{ ToolchainVersion }}")]
 {{ ClientClassAccessModifier }} partial class {{ Class }} {% if HasBaseType %}: {% endif %}{% if HasBaseClass %}{{ BaseClass }}{% if GenerateClientInterfaces %}, {% endif %}{% endif %}{% if GenerateClientInterfaces %}I{{ Class }}{% endif %}
 {
@@ -35,43 +35,13 @@
 {%     assign constructorParameters = constructorParameters | append: HttpClientType | append: " httpClient" -%}
 {% endif -%}
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public {{ Class }}({{ constructorParameters}},System.Net.Http.DelegatingHandler delegatingHandler){% if HasConfigurationClass and HasBaseClass -%}{{ " : base(configuration)"}}{% endif %}
+    public {{ Class }}(string baseUrl,System.Net.Http.DelegatingHandler delegatingHandler){% if HasConfigurationClass and HasBaseClass -%}{{ " : base(configuration)"}}{% endif %}
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
 
-        _delegatingHandler = delegatingHandler;
-{%     if UseBaseUrl -%}
-{%         if HasBaseUrl -%}
-{%             if GenerateBaseUrlProperty -%}
-        BaseUrl = "{{ BaseUrl }}";
-{%             else -%}
-{%                 if BaseUrl != "" -%}
-{%                     assign baseUrlLength = BaseUrl | size -%}
-{%                     assign lastUrlCharIndex = baseUrlLength | minus: 1 -%}
-{%                     assign lastUrlChar = BaseUrl | slice: lastUrlCharIndex, 1 -%}
-{%                     if lastUrlChar == "/" -%}
-        _baseUrl = "{{ BaseUrl }}";
-{%                     else -%}
-        _baseUrl = "{{ BaseUrl }}/";
-{%                     endif -%}
-{%                 endif -%}
-{%             endif -%}
-{%         else -%}
-{%             if GenerateBaseUrlProperty -%}
-        BaseUrl = baseUrl;
-{%             else -%}
-{%                 if HasConfigurationClass == false -%}
-        _baseUrl = (string.IsNullOrEmpty(baseUrl) || baseUrl.EndsWith("/"))
-            ? baseUrl
-            : baseUrl + "/";
-{%                 endif -%}
-{%             endif -%}
-{%         endif -%}
-{%     endif -%}
-{%     if InjectHttpClient -%}
-        _httpClient = httpClient;
-{%     endif -%}
-        Initialize();
+    _delegatingHandler = delegatingHandler;
+    BaseUrl = baseUrl;  
+    Initialize();
     {% template Client.Class.Constructor %}
     }
 
