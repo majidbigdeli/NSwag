@@ -2,13 +2,12 @@
 [System.CodeDom.Compiler.GeneratedCode("NSwag", "{{ ToolchainVersion }}")]
 {{ ClientClassAccessModifier }} partial class {{ Class }} {% if HasBaseType %}: {% endif %}{% if HasBaseClass %}{{ BaseClass }}{% if GenerateClientInterfaces %}, {% endif %}{% endif %}{% if GenerateClientInterfaces %}I{{ Class }}{% endif %}
 {
-{% if UseBaseUrl -%}
+    // Always present: base url field and delegating handler
     #pragma warning disable 8618
     private string _baseUrl;
     private readonly System.Net.Http.DelegatingHandler _delegatingHandler;
     #pragma warning restore 8618
 
-{% endif -%}
 {% if InjectHttpClient -%}
     private {{ HttpClientType }} _httpClient;
 {% endif -%}
@@ -22,26 +21,17 @@
     private {{ JsonSerializerSettingsType }} _instanceSettings;
 {% endif -%}
 
-{% assign constructorParameters = "" -%}
-{% if HasConfigurationClass -%}
-{%     assign constructorParameters = ConfigurationClass | append: " configuration" -%}
-{% endif -%}
-{% if UseBaseUrl and HasBaseUrl == false and HasConfigurationClass == false -%}
-{%     unless constructorParameters == "" -%}{% assign constructorParameters = constructorParameters | append: ", " -%}{% endunless -%}
-{%     assign constructorParameters = constructorParameters | append: "string baseUrl" -%}
-{% endif -%}
-{% if InjectHttpClient -%}
-{%     unless constructorParameters == "" -%}{% assign constructorParameters = constructorParameters | append: ", " -%}{% endunless -%}
-{%     assign constructorParameters = constructorParameters | append: HttpClientType | append: " httpClient" -%}
-{% endif -%}
+    // Fixed constructor: always requires baseUrl and delegatingHandler
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public {{ Class }}(string baseUrl,System.Net.Http.DelegatingHandler delegatingHandler){% if HasConfigurationClass and HasBaseClass -%}{{ " : base(configuration)"}}{% endif %}
+    public {{ Class }}(string baseUrl,System.Net.Http.DelegatingHandler delegatingHandler)
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
-
-    _delegatingHandler = delegatingHandler;
-    BaseUrl = baseUrl;  
-    Initialize();
+        _delegatingHandler = delegatingHandler;
+{% if InjectHttpClient -%}
+        // If using injected HttpClient, ensure it's initialized elsewhere or via a different ctor overload if you add one.
+{% endif -%}
+        BaseUrl = baseUrl;
+        Initialize();
     {% template Client.Class.Constructor %}
     }
 
@@ -60,7 +50,7 @@
         return settings;
     }
 
-{% if UseBaseUrl and GenerateBaseUrlProperty -%}
+    // BaseUrl property: always generated
     public string BaseUrl
     {
         get { return _baseUrl; }
@@ -72,7 +62,6 @@
         }
     }
 
-{% endif -%}
 {% if ExposeJsonSerializerSettings -%}
 {%     assign serializerSettingsAccessModifier = "public" %}
 {% else -%}
@@ -268,7 +257,8 @@
 {%     endif -%}
 
                 var urlBuilder_ = new System.Text.StringBuilder();
-                {% if UseBaseUrl %}if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);{% endif %}
+                // Always append BaseUrl if provided
+                if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
                 // Operation Path: "{{ operation.Path }}"
 {%     if operation.Path contains "{" -%}
 {%        assign pathParts = operation.Path | split: "{" -%}
@@ -393,11 +383,6 @@
 {%         endif -%}
 {%     else -%}
 {%         if operation.HasSuccessResponse == false -%}
-{% comment -%}
-    If the success response has already been explicitely declared, there is no need for this default code (because handled above).
-    Otherwise, return default values on success because we don't want to throw on "unknown status code".
-    Success is always expected
-{%- endcomment %}
                     if (status_ == 200 || status_ == 204)
                     {
 {%             if operation.HasResultType -%}
@@ -408,7 +393,7 @@
 {%                 endif -%}
 {%             elsif operation.WrapResponse -%}
                         return new {{ ResponseClass }}(status_, headers_);
-{%             else -%}{% comment %} This method isn't expected to return a value. Just return. {% endcomment %}
+{%             else -%}
                         return;
 {%             endif -%}
                     }
