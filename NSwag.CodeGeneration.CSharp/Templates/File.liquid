@@ -211,10 +211,15 @@ public partial class {{ClientName}}
         => defaultFactory(baseUrl, handler);
 
     {% for name in ApiClientNames %}
-    public I{{name}} {{name}} { get; }
+    public I{{name}} {{name}} { get; private set; }
     {% endfor %}
 
     public {{ClientName}}(string baseUrl, System.Net.Http.DelegatingHandler delegatingHandler)
+    {
+        Initialize(baseUrl, delegatingHandler);
+    }
+
+    protected virtual void Initialize(string baseUrl, System.Net.Http.DelegatingHandler delegatingHandler)
     {
         {% for name in ApiClientNames %}
         {{name}} = Create<I{{name}}>(baseUrl, delegatingHandler, (u,h) => new {{name}}(u,h));
