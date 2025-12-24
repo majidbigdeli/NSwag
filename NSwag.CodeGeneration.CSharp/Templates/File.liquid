@@ -214,6 +214,10 @@ public partial class {{ClientName}}
     public I{{name}} {{name}} { get; private set; }
     {% endfor %}
 
+    public {{ClientName}}()
+    {        
+    }
+
     public {{ClientName}}(string baseUrl, System.Net.Http.DelegatingHandler delegatingHandler)
     {
         Initialize(baseUrl, delegatingHandler);
