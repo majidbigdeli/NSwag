@@ -201,22 +201,27 @@ namespace {{ Namespace }}
 {%     endif -%}
 {%- endif %}
 
-public class {{ClientName}}
+public partial class {{ClientName}}
 {
+    protected virtual TInterface Create<TInterface>(
+        string baseUrl,
+        System.Net.Http.DelegatingHandler handler,
+        System.Func<string, System.Net.Http.DelegatingHandler, TInterface> defaultFactory)
+        where TInterface : class
+        => defaultFactory(baseUrl, handler);
 
     {% for name in ApiClientNames %}
-        public I{{name}} {{name}} { get; }
+    public I{{name}} {{name}} { get; }
     {% endfor %}
 
     public {{ClientName}}(string baseUrl, System.Net.Http.DelegatingHandler delegatingHandler)
     {
-
         {% for name in ApiClientNames %}
-            {{name}} = new {{name}}(baseUrl,delegatingHandler);
+        {{name}} = Create<I{{name}}>(baseUrl, delegatingHandler, (u,h) => new {{name}}(u,h));
         {% endfor %}
-
     }
 }
+
 
 }
 
